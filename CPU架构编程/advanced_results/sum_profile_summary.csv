@@ -1,6 +1,0 @@
-﻿"category","algorithm","ipc","cpi","giga_insts_per_sec","retired_insts_ginst_5s","retired_branches_pti","retired_branch_mispred_pti","branch_mispredict_ratio_pct"
-"base","naive","0.46","2.19","2.29","11.45","91.9","0.06","0.0653"
-"base","superscalar_2way","1.63","0.61","8.05","40.25","199.94","0.02","0.01"
-"base","recursive","2.97","0.34","14.3","71.5","176.4","0.02","0.0113"
-"advanced","unroll4","1.29","0.77","6.34","31.7","249.76","0.02","0.008"
-"advanced","unroll8","1.16","0.86","5.59","27.95","249.75","0.02","0.008"

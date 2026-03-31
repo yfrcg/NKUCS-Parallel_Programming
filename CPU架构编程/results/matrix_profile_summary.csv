@@ -1,3 +1,0 @@
-﻿algorithm,l1d_hit_rate_pct,l2_hit_rate_pct,l3_hit_rate_pct,ipc,dc_access_pti,l2_access_pti,l3_access_pti
-naive,49.25,87.75,84.93,0.92,291.8,340.98,16.76
-cache_opt,75.14,50.45,96.97,1.23,671.99,329.63,89.47
