@@ -1,0 +1,6 @@
+*.csv 
+*.exe 
+*.svg 
+*.txt 
+.vs/ 
+bin/ 
