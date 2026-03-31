@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="460.0" y="32" text-anchor="middle" font-size="24" font-family="Segoe UI">Experiment 1 Runtime Comparison</text>
+<text x="22" y="250.0" transform="rotate(-90 22 250.0)" font-size="16" font-family="Segoe UI">ms per call</text>
+<line x1="90" y1="440.00" x2="890" y2="440.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="445.00" text-anchor="end" font-size="12" font-family="Consolas">0.00</text>
+<line x1="90" y1="364.00" x2="890" y2="364.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="369.00" text-anchor="end" font-size="12" font-family="Consolas">11.36</text>
+<line x1="90" y1="288.00" x2="890" y2="288.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="293.00" text-anchor="end" font-size="12" font-family="Consolas">22.72</text>
+<line x1="90" y1="212.00" x2="890" y2="212.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="217.00" text-anchor="end" font-size="12" font-family="Consolas">34.08</text>
+<line x1="90" y1="136.00" x2="890" y2="136.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="141.00" text-anchor="end" font-size="12" font-family="Consolas">45.44</text>
+<line x1="90" y1="60.00" x2="890" y2="60.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="65.00" text-anchor="end" font-size="12" font-family="Consolas">56.79</text>
+<line x1="90" y1="60" x2="90" y2="440" stroke="#222" stroke-width="2"/>
+<line x1="90" y1="440" x2="890" y2="440" stroke="#222" stroke-width="2"/>
+<line x1="90.00" y1="440" x2="90.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="90.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">256</text>
+<line x1="290.00" y1="440" x2="290.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="290.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">512</text>
+<line x1="490.00" y1="440" x2="490.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="490.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">1024</text>
+<line x1="690.00" y1="440" x2="690.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="690.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">2048</text>
+<line x1="890.00" y1="440" x2="890.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="890.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">3072</text>
+<polyline fill="none" stroke="#1f77b4" stroke-width="3" points="90.00,439.29 290.00,433.82 490.00,414.71 690.00,305.07 890.00,109.57"/>
+<circle cx="90.00" cy="439.29" r="4" fill="#1f77b4"/>
+<text x="90.00" y="429.29" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">0.11</text>
+<circle cx="290.00" cy="433.82" r="4" fill="#1f77b4"/>
+<text x="290.00" y="423.82" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">0.92</text>
+<circle cx="490.00" cy="414.71" r="4" fill="#1f77b4"/>
+<text x="490.00" y="404.71" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">3.78</text>
+<circle cx="690.00" cy="305.07" r="4" fill="#1f77b4"/>
+<text x="690.00" y="295.07" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">20.17</text>
+<circle cx="890.00" cy="109.57" r="4" fill="#1f77b4"/>
+<text x="890.00" y="99.57" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">49.39</text>
+<line x1="100" y1="500" x2="124" y2="500" stroke="#1f77b4" stroke-width="4"/>
+<text x="130" y="505" font-size="13" font-family="Segoe UI">naive</text>
+<polyline fill="none" stroke="#d62728" stroke-width="3" points="90.00,439.96 290.00,439.85 490.00,439.37 690.00,431.90 890.00,416.14"/>
+<circle cx="90.00" cy="439.96" r="4" fill="#d62728"/>
+<text x="90.00" y="429.96" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.01</text>
+<circle cx="290.00" cy="439.85" r="4" fill="#d62728"/>
+<text x="290.00" y="429.85" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.02</text>
+<circle cx="490.00" cy="439.37" r="4" fill="#d62728"/>
+<text x="490.00" y="429.37" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.09</text>
+<circle cx="690.00" cy="431.90" r="4" fill="#d62728"/>
+<text x="690.00" y="421.90" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">1.21</text>
+<circle cx="890.00" cy="416.14" r="4" fill="#d62728"/>
+<text x="890.00" y="406.14" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">3.57</text>
+<line x1="280" y1="500" x2="304" y2="500" stroke="#d62728" stroke-width="4"/>
+<text x="310" y="505" font-size="13" font-family="Segoe UI">cache_opt</text>
+</svg>

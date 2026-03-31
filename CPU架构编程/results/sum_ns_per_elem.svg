@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="460.0" y="32" text-anchor="middle" font-size="24" font-family="Segoe UI">Experiment 2 ns/element Comparison</text>
+<text x="22" y="250.0" transform="rotate(-90 22 250.0)" font-size="16" font-family="Segoe UI">ns per element</text>
+<line x1="90" y1="440.00" x2="890" y2="440.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="445.00" text-anchor="end" font-size="12" font-family="Consolas">0.00</text>
+<line x1="90" y1="364.00" x2="890" y2="364.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="369.00" text-anchor="end" font-size="12" font-family="Consolas">0.44</text>
+<line x1="90" y1="288.00" x2="890" y2="288.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="293.00" text-anchor="end" font-size="12" font-family="Consolas">0.88</text>
+<line x1="90" y1="212.00" x2="890" y2="212.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="217.00" text-anchor="end" font-size="12" font-family="Consolas">1.32</text>
+<line x1="90" y1="136.00" x2="890" y2="136.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="141.00" text-anchor="end" font-size="12" font-family="Consolas">1.76</text>
+<line x1="90" y1="60.00" x2="890" y2="60.00" stroke="#d9d9d9" stroke-width="1"/>
+<text x="80" y="65.00" text-anchor="end" font-size="12" font-family="Consolas">2.20</text>
+<line x1="90" y1="60" x2="90" y2="440" stroke="#222" stroke-width="2"/>
+<line x1="90" y1="440" x2="890" y2="440" stroke="#222" stroke-width="2"/>
+<line x1="90.00" y1="440" x2="90.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="90.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">32768</text>
+<line x1="356.67" y1="440" x2="356.67" y2="446" stroke="#222" stroke-width="1"/>
+<text x="356.67" y="480" text-anchor="middle" font-size="13" font-family="Consolas">262144</text>
+<line x1="623.33" y1="440" x2="623.33" y2="446" stroke="#222" stroke-width="1"/>
+<text x="623.33" y="480" text-anchor="middle" font-size="13" font-family="Consolas">2097152</text>
+<line x1="890.00" y1="440" x2="890.00" y2="446" stroke="#222" stroke-width="1"/>
+<text x="890.00" y="480" text-anchor="middle" font-size="13" font-family="Consolas">16777216</text>
+<polyline fill="none" stroke="#1f77b4" stroke-width="3" points="90.00,339.70 356.67,337.83 623.33,337.11 890.00,337.99"/>
+<circle cx="90.00" cy="339.70" r="4" fill="#1f77b4"/>
+<text x="90.00" y="329.70" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">0.58</text>
+<circle cx="356.67" cy="337.83" r="4" fill="#1f77b4"/>
+<text x="356.67" y="327.83" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">0.59</text>
+<circle cx="623.33" cy="337.11" r="4" fill="#1f77b4"/>
+<text x="623.33" y="327.11" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">0.60</text>
+<circle cx="890.00" cy="337.99" r="4" fill="#1f77b4"/>
+<text x="890.00" y="327.99" text-anchor="middle" font-size="11" font-family="Consolas" fill="#1f77b4">0.59</text>
+<line x1="100" y1="500" x2="124" y2="500" stroke="#1f77b4" stroke-width="4"/>
+<text x="130" y="505" font-size="13" font-family="Segoe UI">naive</text>
+<polyline fill="none" stroke="#d62728" stroke-width="3" points="90.00,389.85 356.67,389.19 623.33,387.85 890.00,383.96"/>
+<circle cx="90.00" cy="389.85" r="4" fill="#d62728"/>
+<text x="90.00" y="379.85" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.29</text>
+<circle cx="356.67" cy="389.19" r="4" fill="#d62728"/>
+<text x="356.67" y="379.19" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.29</text>
+<circle cx="623.33" cy="387.85" r="4" fill="#d62728"/>
+<text x="623.33" y="377.85" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.30</text>
+<circle cx="890.00" cy="383.96" r="4" fill="#d62728"/>
+<text x="890.00" y="373.96" text-anchor="middle" font-size="11" font-family="Consolas" fill="#d62728">0.32</text>
+<line x1="280" y1="500" x2="304" y2="500" stroke="#d62728" stroke-width="4"/>
+<text x="310" y="505" font-size="13" font-family="Segoe UI">superscalar_2way</text>
+<polyline fill="none" stroke="#2ca02c" stroke-width="3" points="90.00,111.41 356.67,109.57 623.33,111.29 890.00,111.42"/>
+<circle cx="90.00" cy="111.41" r="4" fill="#2ca02c"/>
+<text x="90.00" y="101.41" text-anchor="middle" font-size="11" font-family="Consolas" fill="#2ca02c">1.91</text>
+<circle cx="356.67" cy="109.57" r="4" fill="#2ca02c"/>
+<text x="356.67" y="99.57" text-anchor="middle" font-size="11" font-family="Consolas" fill="#2ca02c">1.92</text>
+<circle cx="623.33" cy="111.29" r="4" fill="#2ca02c"/>
+<text x="623.33" y="101.29" text-anchor="middle" font-size="11" font-family="Consolas" fill="#2ca02c">1.91</text>
+<circle cx="890.00" cy="111.42" r="4" fill="#2ca02c"/>
+<text x="890.00" y="101.42" text-anchor="middle" font-size="11" font-family="Consolas" fill="#2ca02c">1.91</text>
+<line x1="460" y1="500" x2="484" y2="500" stroke="#2ca02c" stroke-width="4"/>
+<text x="490" y="505" font-size="13" font-family="Segoe UI">recursive</text>
+</svg>
