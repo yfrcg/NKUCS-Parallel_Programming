@@ -1,0 +1,83 @@
+MPI runtime size: 32
+MPI runtime rank: 0
+GKH backend: MPI replicated-B row-distributed U/V updates (MPI_Send/MPI_Recv/MPI_Gatherv)
+=== 固定值 5x5 ===
+  converged                 : yes
+  ||A-U*S*V^T||_F           : 3.8715e-12
+  relative recon error      : 2.76725e-13
+  ||U^T U-I||_F             : 1.08566e-15
+  ||V^T V-I||_F             : 1.16757e-15
+  diagonal structure error  : 0
+  descending order error    : 0
+  nonnegative diagonal      : yes
+  time bidiagonalization(ms): 0.01519
+  time gkh iteration(ms)    : 23.9505
+  结果: PASS
+
+=== 随机 8x8 ===
+  converged                 : yes
+  ||A-U*S*V^T||_F           : 1.45856e-14
+  relative recon error      : 9.3567e-16
+  ||U^T U-I||_F             : 2.28472e-15
+  ||V^T V-I||_F             : 2.19666e-15
+  diagonal structure error  : 0
+  descending order error    : 0
+  nonnegative diagonal      : yes
+  time bidiagonalization(ms): 0.01412
+  time gkh iteration(ms)    : 0.526302
+  结果: PASS
+
+=== 近秩亏损 10x8 ===
+  converged                 : yes
+  ||A-U*S*V^T||_F           : 2.3981e-14
+  relative recon error      : 2.18747e-15
+  ||U^T U-I||_F             : 2.48938e-15
+  ||V^T V-I||_F             : 1.69019e-15
+  diagonal structure error  : 0
+  descending order error    : 0
+  nonnegative diagonal      : yes
+  time bidiagonalization(ms): 0.00955
+  time gkh iteration(ms)    : 0.919822
+  结果: PASS
+
+=== 随机 10x8 ===
+  converged                 : yes
+  ||A-U*S*V^T||_F           : 4.24993e-12
+  relative recon error      : 1.93168e-13
+  ||U^T U-I||_F             : 2.07483e-15
+  ||V^T V-I||_F             : 1.81497e-15
+  diagonal structure error  : 0
+  descending order error    : 0
+  nonnegative diagonal      : yes
+  time bidiagonalization(ms): 0.00802
+  time gkh iteration(ms)    : 4.35794
+  结果: PASS
+
+=== 随机 1000x1000 ===
+  converged                 : yes
+  ||A-U*S*V^T||_F           : 2.03714e-10
+  relative recon error      : 3.52267e-13
+  ||U^T U-I||_F             : 2.16856e-13
+  ||V^T V-I||_F             : 2.18559e-13
+  diagonal structure error  : 0
+  descending order error    : 0
+  nonnegative diagonal      : yes
+  time bidiagonalization(ms): 3255.83
+  time gkh iteration(ms)    : 607.715
+  结果: PASS
+
+==============================
+随机种子基值: 20260410
+总上二对角化耗时(ms): 3255.88
+总GKH迭代耗时(ms): 637.469
+通过: 5 / 5
+==============================
+GKH task pool mode: master-worker block queue
+GKH worker slots from PBS_NODEFILE/SVD_WORKERS: 32
+GKH task pool calls: 5
+GKH initial non-1x1 tasks: 5
+GKH processed tasks: 1019
+GKH returned tasks: 1014
+GKH max queue size: 3
+
+Authorized users only. All activities may be monitored and reported.

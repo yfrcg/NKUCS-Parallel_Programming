@@ -1,0 +1,388 @@
+% -*- coding: utf-8 -*-
+\documentclass[UTF8,a4paper,10pt]{ctexart}
+
+\usepackage[left=3.17cm,right=3.17cm,top=2.74cm,bottom=2.74cm]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[colorlinks,linkcolor=black,anchorcolor=blue,urlcolor=blue]{hyperref}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny,
+  frame=single,
+  columns=fullflexible,
+  keywordstyle=\color{blue!70}\bfseries,
+  commentstyle=\color{gray!70},
+  stringstyle=\color{red!60}
+}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+
+\begin{titlepage}
+  \begin{center}
+    \IfFileExists{NKU.png}{\includegraphics[width=0.75\textwidth]{NKU.png}\\[1cm]}{}
+    {\Huge \kaishu \textbf{南开大学}}\\[0.8cm]
+    {\Large \kaishu \textbf{并行程序设计实验报告}}\\[0.8cm]
+    \HRule\\[0.8cm]
+    {\LARGE \bfseries MPI 编程实验：任务池版本的 SVD 并行化}\\[0.4cm]
+    \HRule\\[2.0cm]
+    {\Large 姓名：\underline{\hspace{4cm}}}\\[0.5cm]
+    {\Large 年级：\underline{\hspace{4cm}}}\\[0.5cm]
+    {\Large 专业：\underline{\hspace{4cm}}}\\[0.5cm]
+    \vfill
+    {\Large \today}
+  \end{center}
+\end{titlepage}
+
+\newpage
+\thispagestyle{empty}
+\begin{abstract}
+本文围绕矩阵奇异值分解（Singular Value Decomposition, SVD）中的 Golub--Kahan
+迭代阶段开展 MPI 并行化实验。实验首先实现了基于 Master-Worker 的任务池版本，
+由主进程维护未收敛的双对角子块任务，并将任务动态分发给工作进程计算；随后进一步实现优化后的
+MPI 方案，将稠密正交矩阵 $U,V$ 按行分布到不同进程中，同时复制双对角矩阵 $B$，
+从而降低任务池版本中大量切片传输带来的通信开销。实验在进程数
+$1,2,4,8,16,32$ 下进行测试，验证了两种 MPI 版本的正确性，并比较了不同进程数下的
+GKH 迭代耗时、加速比和通信开销。
+
+\noindent\textbf{关键词：} MPI；SVD；Golub--Kahan；任务池；Master-Worker；并行计算
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+\setcounter{page}{1}
+
+\section{概述}
+
+\subsection{实验背景}
+奇异值分解是数值线性代数中的基础算法之一。对于矩阵
+$A\in\mathbb{R}^{m\times n}$，SVD 将其分解为
+\[
+  A = U \Sigma V^T,
+\]
+其中 $U$ 和 $V$ 为正交矩阵，$\Sigma$ 为非负对角矩阵。SVD 在矩阵压缩、最小二乘、
+主成分分析和科学计算中具有广泛应用。
+
+本实验框架采用两阶段求解流程：首先通过 Householder 变换将一般矩阵化为上双对角矩阵，
+随后通过 Golub--Kahan（GKH）迭代将上双对角矩阵进一步收敛为对角矩阵。由于大规模矩阵下
+GKH 迭代中对 $U,V$ 的旋转更新开销较高，因此该阶段适合作为 MPI 并行化对象。
+
+\subsection{实验目标}
+本实验目标如下：
+\begin{enumerate}
+  \item 理解 SVD 中上双对角化和 GKH 迭代的计算流程；
+  \item 实现基于 MPI 的任务池并行版本；
+  \item 分析任务池版本的通信开销和性能瓶颈；
+  \item 实现优化后的 MPI 版本，并与任务池版本进行性能对比；
+  \item 在不同 MPI 进程数下验证正确性并分析加速比。
+\end{enumerate}
+
+\subsection{实验内容概述}
+实验代码分为两个版本。根目录下的代码为任务池版本，输出文件为
+\verb|test_np1_seed20260410.o| 至 \verb|test_np32_seed20260410.o|。
+\verb|Viewing and modeifying are not permitted| 目录下的代码为优化后的 MPI 版本，
+对应输出文件为 \verb|test_np1_final_seed20260410.o| 至
+\verb|test_np32_final_seed20260410.o|。
+
+\section{问题与算法基础}
+
+\subsection{SVD 分解问题}
+对于 $m\ge n$ 的矩阵 $A$，SVD 分解目标是求出
+\[
+  A = U \Sigma V^T,
+\]
+其中 $U\in\mathbb{R}^{m\times m}$，$V\in\mathbb{R}^{n\times n}$ 为正交矩阵，
+$\Sigma\in\mathbb{R}^{m\times n}$ 的主对角线元素为非负奇异值，并按降序排列。
+
+\subsection{双对角化与 GKH 迭代}
+实验框架首先调用 \verb|to_bidiagonal|，使用 Householder 变换将 $A$ 化为上双对角矩阵
+$B$，并同步累积 $U,V$，保持
+\[
+  A = U B V^T.
+\]
+随后调用 GKH 迭代，通过 Wilkinson 位移和 Givens 旋转追赶 bulge，使 $B$ 的超对角线逐渐
+收敛到 0。每次对 $B$ 的左、右旋转都必须同步更新 $U,V$，以保持分解等价性。
+
+\subsection{串行算法流程}
+串行版本的主要流程如下：
+\begin{enumerate}
+  \item 清理 $B$ 中上双对角结构外的数值噪声；
+  \item 检查主对角线接近 0 的特殊情况，并通过额外 Givens 旋转修复；
+  \item 根据超对角线是否收敛，将 $B$ 划分为若干活动块；
+  \item 对每个非平凡活动块执行一次 GKH bulge chasing；
+  \item 收敛后将奇异值整理为非负并按降序排列。
+\end{enumerate}
+
+\subsection{正确性验证指标}
+实验中对每个测试矩阵验证如下指标：
+\begin{enumerate}
+  \item 重构误差 $\|A-U\Sigma V^T\|_F$；
+  \item 相对重构误差；
+  \item $U,V$ 的正交性误差；
+  \item $\Sigma$ 的对角结构误差；
+  \item 奇异值是否非负且降序排列。
+\end{enumerate}
+所有测试输出均显示 5 个测试样例全部通过。
+
+\section{MPI 任务池并行设计}
+
+\subsection{并行化思路}
+任务池版本采用 Master-Worker 模型。0 号进程作为 Master，维护尚未收敛的活动块队列；
+其余进程作为 Worker，从 Master 接收一个活动块，对该块执行一次局部 GKH 迭代后，将更新后的
+$B$ 子块以及对应的 $U,V$ 列切片返回 Master。
+
+该设计的出发点是：当上双对角矩阵的超对角线出现收敛位置后，原问题会分裂为多个互不重叠的子问题，
+这些子问题可以并行处理。
+
+\subsection{任务划分方式}
+任务以活动块 $[l,r]$ 表示，其中 $l,r$ 为双对角矩阵中的列区间。若 $r=l$，该块已经是单个奇异值，
+无需继续迭代；若 $r>l$，则作为非平凡任务进入任务池。
+
+Master 通过扫描 $B$ 的超对角线划分活动块。对于满足
+\[
+  |B_{k,k+1}| \le \epsilon (|B_{k,k}| + |B_{k+1,k+1}| + 1)
+\]
+的位置，将超对角线元素置零，从而把矩阵划分为若干子块。
+
+\subsection{Master-Worker 任务池模型}
+任务池版本中，Master 初始化任务队列，向空闲 Worker 发送活动块，接收 Worker 返回的局部结果，
+再将返回子块重新分裂并把非平凡子块重新入队。Worker 接收任务头、局部 $B$ 子块和 $U,V$ 列切片，
+在局部数据上执行一次 GKH 迭代，将更新后的局部矩阵发送回 Master，并在接收结束信号后退出。
+
+\subsection{任务分发与结果回收}
+任务池版本中传输的数据包括活动块区间 $[l,r]$、局部方块 $B(l:r,l:r)$、
+$U$ 中与活动块对应的列切片以及 $V$ 中与活动块对应的列切片。
+Worker 完成一次迭代后返回上述三个局部矩阵，Master 将其写回全局矩阵，并根据新的超对角线状态继续分裂任务。
+
+\subsection{进程间通信设计}
+任务池版本使用阻塞式 \verb|MPI_Send| 和 \verb|MPI_Recv| 完成任务分发与结果回收。为了统计通信开销，
+代码在每次 MPI 发送和接收前后调用 \verb|MPI_Wtime|，累计通信时间。输出中包含如下统计：
+\begin{lstlisting}[language=bash]
+GKH MPI master communication time(ms)
+GKH MPI worker communication time sum(ms)
+GKH MPI total communication time sum(ms)
+\end{lstlisting}
+
+其中 worker 通信时间为所有 Worker 进程通信时间的累加值。由于使用阻塞接收，该指标中也包含 Worker 等待任务的时间，
+因此它反映的是任务池模型下通信与等待共同造成的并行开销。
+
+\subsection{通信时间统计方法}
+根目录任务池版本对所有 \verb|MPI_Send| 和 \verb|MPI_Recv| 进行封装：
+\begin{lstlisting}[language=C++]
+static void timed_mpi_send(const void *buf, int count, MPI_Datatype datatype,
+                           int dest, int tag, MPI_Comm comm)
+{
+    const double t0 = MPI_Wtime();
+    MPI_Send(buf, count, datatype, dest, tag, comm);
+    g_mpi_comm_seconds += MPI_Wtime() - t0;
+}
+\end{lstlisting}
+Worker 在接收结束信号后将本进程累计通信时间发送给 Master，Master 汇总后统一输出。
+
+\subsection{任务池版本编译与运行方式}
+任务池版本位于项目根目录，编译命令如下：
+\begin{lstlisting}[language=bash]
+mpic++ main.cpp gkh.cpp bidiagonalization.cpp -o main \
+    -O2 -DSVD_ENABLE_MPI -fopenmp -lpthread -std=c++17
+\end{lstlisting}
+典型运行命令如下：
+\begin{lstlisting}[language=bash]
+qsub -v SVD_SEED=20260410,SVD_MPI_NP=32 \
+    -l nodes=4:ppn=8 qsub_mpi.sh
+\end{lstlisting}
+
+\subsection{任务池版本测试设置}
+实验使用 PBS 作业脚本提交 MPI 程序。进程数设置为 $1,2,4,8,16,32$，
+其中 32 进程对应 4 个节点、每节点 8 个进程。随机种子固定为 20260410。
+每次测试包含固定值 $5\times 5$、随机 $8\times 8$、近秩亏损 $10\times 8$、
+随机 $10\times 8$ 和随机 $1000\times 1000$ 共 5 个样例。
+
+\subsection{任务池版本正确性与性能结果}
+任务池版本在所有进程数下均通过 5 个测试样例。表 \ref{tab:taskpool} 给出该版本在
+$1000\times 1000$ 样例上的测试结果，加速比以任务池版本 np=1 的 GKH 迭代耗时为基准。
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{rrrrr}
+    \toprule
+    进程数 & 双对角化耗时/ms & GKH 耗时/ms & 加速比 & 通信时间总和/ms \\
+    \midrule
+    1  & 4546.63 & 7892.07  & 1.000 & 0 \\
+    2  & 4908.15 & 21915.20 & 0.360 & 32732.9 \\
+    4  & 4639.83 & 21300.40 & 0.371 & 93464 \\
+    8  & 3309.09 & 18686.50 & 0.422 & 200294 \\
+    16 & 2991.65 & 16819.50 & 0.469 & 371423 \\
+    32 & 4413.74 & 22396.90 & 0.352 & 997380 \\
+    \bottomrule
+  \end{tabular}
+  \caption{任务池版本在 $1000\times 1000$ 样例上的性能数据}
+  \label{tab:taskpool}
+\end{table}
+
+\subsection{任务池版本性能分析}
+任务池版本在进程数增加后未获得有效加速，np=32 时 GKH 耗时为 22396.9 ms，
+慢于 np=1 的 7892.07 ms。这说明该版本中通信和等待开销超过了并行计算收益。
+通信时间总和随进程数快速增长：np=2 时为 32732.9 ms，np=32 时达到 997380 ms。
+该值是所有进程阻塞通信时间的累加，其中包含 Worker 等待 Master 分发任务的时间。
+
+该结果说明任务池版本的主要问题并不是单次 GKH 局部计算，而是任务粒度和通信方式不适合该问题。
+当活动块数量不足时，大量 Worker 处于等待状态；当活动块被分发时，又需要传输稠密矩阵切片，
+导致通信开销进一步放大。
+
+\section{优化后的 MPI 设计}
+
+\subsection{优化动机}
+任务池版本虽然实现了动态任务分发，但在实际测试中性能并不理想。原因在于 GKH 迭代初期通常只有一个很大的活动块，
+此时任务池难以产生足够多的独立任务；而当任务被发送给 Worker 时，又需要传输 $B$ 子块和 $U,V$ 的稠密列切片，
+通信量较大。
+
+因此，优化版本改变了并行化粒度：不再把活动块作为主要分发对象，而是将稠密矩阵 $U,V$ 按行划分给不同进程。
+每个进程保存 $B$ 的完整副本，并只更新自己负责的 $U,V$ 行块。这样 Givens 旋转仍按相同顺序执行，
+但对 $U,V$ 的大规模稠密更新可以在多个进程上并行完成。
+
+\subsection{任务池方案的性能瓶颈}
+任务池版本的主要瓶颈包括：
+\begin{enumerate}
+  \item 活动块数量有限，尤其是大矩阵收敛前期难以形成大量独立任务；
+  \item Master 需要频繁打包和解包矩阵切片；
+  \item Worker 可能长时间阻塞等待任务；
+  \item 进程数增加后，Worker 通信等待时间累积明显增大；
+  \item 任务分发粒度与 GKH 迭代的实际计算热点不完全匹配。
+\end{enumerate}
+
+\subsection{行分布式矩阵更新}
+优化后的代码位于 \verb|Viewing and modeifying are not permitted| 目录。其核心思路是：
+\begin{enumerate}
+  \item 每个 MPI 进程保存完整的 $B$；
+  \item 将 $U$ 的行按照进程编号划分为连续行块；
+  \item 将 $V$ 的行也按照进程编号划分为连续行块；
+  \item 每个进程在 GKH 迭代中只更新本地的 \verb|localU| 和 \verb|localV|；
+  \item 迭代结束后使用 \verb|MPI_Gatherv| 将各进程的行块收集回 0 号进程。
+\end{enumerate}
+
+行划分使用如下形式：
+\[
+  \text{begin}(p)=\left\lfloor\frac{rows\cdot p}{P}\right\rfloor,\quad
+  \text{end}(p)=\left\lfloor\frac{rows\cdot (p+1)}{P}\right\rfloor,
+\]
+其中 $P$ 为 MPI 进程数。
+
+\subsection{复制 B 矩阵的同步策略}
+优化版本中每个进程拥有 $B$ 的副本，并按照相同的 GKH 迭代顺序更新 $B$。由于 $B$ 为上双对角矩阵，
+且其更新集中在局部带状区域，复制 $B$ 的内存开销相对 $U,V$ 的稠密矩阵更新较小。
+所有进程根据相同的数值状态执行相同的分块、位移和 Givens 旋转，因此无需在每轮迭代后广播 $B$。
+
+\subsection{MPI\_Send/MPI\_Recv 与 MPI\_Gatherv 通信设计}
+优化版本在初始化时由 0 号进程通过 \verb|MPI_Send| 向其他进程发送：
+\begin{enumerate}
+  \item 矩阵尺寸和本地行块信息；
+  \item 完整的 $B$；
+  \item 对应进程负责的 $U$ 行块；
+  \item 对应进程负责的 $V$ 行块。
+\end{enumerate}
+迭代结束后，各进程调用 \verb|MPI_Gatherv| 将本地 \verb|localU| 和 \verb|localV| 收集到 0 号进程。
+这种方式将通信集中在初始化和收尾阶段，避免了任务池版本中每次任务处理都传输稠密切片的问题。
+
+\subsection{优化后版本编译与运行方式}
+优化版本的编译方式与任务池版本一致，使用 \verb|-DSVD_ENABLE_MPI| 启用 MPI 分支：
+\begin{lstlisting}[language=bash]
+mpic++ main.cpp gkh.cpp bidiagonalization.cpp -o main \
+    -O2 -DSVD_ENABLE_MPI -fopenmp -lpthread -std=c++17
+\end{lstlisting}
+测试进程数为 $1,2,4,8,16,32$，随机种子固定为 20260410。
+
+\subsection{优化版本正确性与性能结果}
+优化版本在所有进程数下均通过 5 个测试样例。表 \ref{tab:optimized} 为优化版本在
+$1000\times 1000$ 样例上的测试结果，加速比以优化版本 np=1 的 GKH 迭代耗时为基准。
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{rrrr}
+    \toprule
+    进程数 & 双对角化耗时/ms & GKH 耗时/ms & 加速比 \\
+    \midrule
+    1  & 3119.62 & 6696.37 & 1.000 \\
+    2  & 4379.98 & 4521.70 & 1.481 \\
+    4  & 3940.77 & 1780.52 & 3.761 \\
+    8  & 3931.13 & 966.931 & 6.925 \\
+    16 & 3826.22 & 661.233 & 10.127 \\
+    32 & 3255.83 & 607.715 & 11.019 \\
+    \bottomrule
+  \end{tabular}
+  \caption{优化版本在 $1000\times 1000$ 样例上的性能数据}
+  \label{tab:optimized}
+\end{table}
+
+\subsection{优化版本加速比分析}
+优化版本表现出明显加速趋势。np=32 时 GKH 耗时下降到 607.715 ms，相对于 np=1 的
+6696.37 ms，加速比约为 11.019。虽然该加速比低于理想线性加速，但已经显著改善了 GKH 迭代阶段的性能。
+优化版本在进程数较大时仍未达到理想线性加速，原因可能包括 MPI 初始化和收尾通信、
+$B$ 的重复计算、负载不完全均衡以及双对角化阶段的串行开销。
+
+\subsection{优化前后方案对比}
+任务池版本侧重于活动块级别的动态负载均衡，但受限于活动块数量和切片通信开销。
+优化版本侧重于稠密矩阵更新的行分布并行，将通信集中在开始和结束阶段，更符合 GKH 迭代中
+$U,V$ 更新占主要开销的特点。表 \ref{tab:compare} 对比两种版本在 $1000\times 1000$ 样例上的 GKH 迭代耗时。
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{rrrr}
+    \toprule
+    进程数 & 任务池 GKH/ms & 优化版 GKH/ms & 耗时比 \\
+    \midrule
+    1  & 7892.07  & 6696.37 & 1.179 \\
+    2  & 21915.20 & 4521.70 & 4.847 \\
+    4  & 21300.40 & 1780.52 & 11.963 \\
+    8  & 18686.50 & 966.931 & 19.326 \\
+    16 & 16819.50 & 661.233 & 25.437 \\
+    32 & 22396.90 & 607.715 & 36.854 \\
+    \bottomrule
+  \end{tabular}
+  \caption{任务池版本与优化版本的 GKH 耗时对比}
+  \label{tab:compare}
+\end{table}
+
+可以看到，进程数越高，优化版本相对于任务池版本的优势越明显。np=32 时，任务池版本耗时约为优化版本的
+36.854 倍。这表明对于本实验中的 SVD GKH 迭代，按活动块动态分发任务并不是最合适的并行方式；
+将稠密矩阵更新按行分布给各进程更能发挥 MPI 并行计算能力。
+
+\section{总结}
+
+\subsection{实验结论}
+本实验完成了任务池版本和优化版本两种 MPI SVD 并行化实现。任务池版本验证了基于活动块的动态分发思路，
+但实验结果表明，该方案在 GKH 迭代中并不能有效加速，主要受限于活动块数量不足和通信等待开销。
+
+优化版本采用复制 $B$、行分布 $U,V$ 的设计，将主要计算热点分散到各 MPI 进程中。
+在 $1000\times 1000$ 样例上，优化版本 np=32 的 GKH 迭代耗时为 607.715 ms，
+相对于 np=1 获得约 11.019 倍加速，显著优于任务池版本。
+
+\subsection{不足之处}
+本实验仍存在以下不足：
+\begin{enumerate}
+  \item 双对角化阶段尚未进行 MPI 并行化；
+  \item 优化版本中每个进程复制 $B$，在更大规模问题上可能带来额外内存开销；
+  \item 当前通信时间统计主要用于任务池版本，优化版本尚未单独细分初始化通信、收尾通信和计算时间；
+  \item 测试矩阵规模较少，尚不足以全面反映不同矩阵结构下的性能表现。
+\end{enumerate}
+
+\subsection{改进方向}
+后续可以从以下方向继续改进：
+\begin{enumerate}
+  \item 对 Householder 双对角化阶段进行 MPI 并行化，减少整体串行部分；
+  \item 在优化版本中进一步统计 \verb|MPI_Send|、\verb|MPI_Recv| 和 \verb|MPI_Gatherv| 的通信耗时；
+  \item 使用非阻塞通信隐藏初始化和结果归并阶段的通信开销；
+  \item 对不同规模和不同秩结构的矩阵进行更系统的性能测试；
+  \item 结合 OpenMP 和 MPI 形成混合并行方案，提高单节点内计算效率。
+\end{enumerate}
+
+\end{document}
